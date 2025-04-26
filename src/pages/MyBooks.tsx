@@ -12,7 +12,7 @@ export default function MyBooks() {
   const { data: books, isLoading, error } = useQuery({
     queryKey: ['my-books'],
     queryFn: async () => {
-      if (!user) return [] as Book[];
+      if (!user) return [];
       
       // Fetch books from Supabase
       const { data, error } = await supabase
@@ -22,15 +22,13 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to Book objects with simplified transformation
+      // Transform raw data to Book objects
       const result: Book[] = [];
       
       if (data) {
         for (const book of data) {
-          // Handle owner data with safe type casting
-          const ownerObj = book.owner && typeof book.owner === 'object' && !Array.isArray(book.owner)
-            ? book.owner as Record<string, unknown>
-            : {} as Record<string, unknown>;
+          // Use a simpler approach to handle owner data
+          const owner = typeof book.owner === 'object' ? book.owner : {};
           
           result.push({
             id: String(book.id || ''),
@@ -40,8 +38,8 @@ export default function MyBooks() {
             description: book.description ? String(book.description) : "",
             condition: String(book.condition || 'Good'),
             owner: {
-              name: ownerObj.name ? String(ownerObj.name) : "",
-              neighborhood: ownerObj.neighborhood ? String(ownerObj.neighborhood) : "",
+              name: owner && 'name' in owner ? String(owner.name || '') : '',
+              neighborhood: owner && 'neighborhood' in owner ? String(owner.neighborhood || '') : '',
             },
             google_books_id: book.google_books_id ? String(book.google_books_id) : undefined
           });

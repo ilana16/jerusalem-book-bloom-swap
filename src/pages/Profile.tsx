@@ -2,17 +2,11 @@
 import { Layout } from "@/components/layout/Layout";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useAuth } from "@/components/AuthProvider";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // No redirection needed if the user is authenticated
-    // Let the conditional rendering below handle the UI
-  }, [user]);
 
   return (
     <Layout>

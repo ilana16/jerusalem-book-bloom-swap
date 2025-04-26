@@ -26,13 +26,17 @@ export function ProfileForm() {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('display_name, bio, neighborhood, avatar_url')
+          .select('display_name, bio, neighborhood')
           .eq('id', user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error('Error fetching profile:', error);
-          toast.error('Failed to fetch profile');
+          
+          // If the error is not related to missing data, show an error toast
+          if (error.code !== 'PGRST116') {
+            toast.error('Failed to fetch profile');
+          }
           return;
         }
 
@@ -41,7 +45,7 @@ export function ProfileForm() {
             displayName: data.display_name || '',
             bio: data.bio || '',
             neighborhood: data.neighborhood || '',
-            avatarUrl: data.avatar_url || ''
+            avatarUrl: profile.avatarUrl // Keep any existing avatar URL
           });
         }
       } catch (error) {
@@ -58,38 +62,17 @@ export function ProfileForm() {
     
     setIsLoading(true);
     try {
-      // Check if avatar_url column exists
-      const { data: checkData, error: checkError } = await supabase
+      // Update profile without avatar_url since it doesn't exist in the database
+      const { error } = await supabase
         .from('profiles')
-        .select('avatar_url')
-        .limit(1);
+        .update({
+          display_name: profile.displayName,
+          bio: profile.bio,
+          neighborhood: profile.neighborhood
+        })
+        .eq('id', user.id);
 
-      // If there's an error indicating avatar_url doesn't exist, update without it
-      if (checkError && checkError.message.includes('avatar_url')) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            display_name: profile.displayName,
-            bio: profile.bio,
-            neighborhood: profile.neighborhood
-          })
-          .eq('id', user.id);
-
-        if (error) throw error;
-      } else {
-        // If avatar_url exists, include it in the update
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            display_name: profile.displayName,
-            bio: profile.bio,
-            neighborhood: profile.neighborhood,
-            avatar_url: profile.avatarUrl
-          })
-          .eq('id', user.id);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
       
       toast.success('Profile updated successfully');
     } catch (error) {

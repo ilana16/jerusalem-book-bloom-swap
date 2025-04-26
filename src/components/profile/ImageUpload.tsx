@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Upload, Camera } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ImageUploadProps {
@@ -29,11 +28,16 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
     const filePath = `${fileName}`;
 
     try {
+      // Check if avatars bucket exists, if not this will fail gracefully
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        toast.error('Error uploading image. Storage might not be configured.');
+        return;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
@@ -42,8 +46,8 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       onChange(publicUrl);
       toast.success('Profile picture updated');
     } catch (error) {
+      console.error('Error uploading image:', error);
       toast.error('Error uploading image');
-      console.error(error);
     } finally {
       setIsUploading(false);
     }
@@ -67,7 +71,11 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             onChange={handleUpload}
             disabled={isUploading}
           />
-          <Upload className="h-6 w-6 text-white" />
+          {isUploading ? (
+            <div className="text-white text-sm">Uploading...</div>
+          ) : (
+            <Upload className="h-6 w-6 text-white" />
+          )}
         </label>
       </div>
     </div>

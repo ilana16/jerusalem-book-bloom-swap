@@ -6,19 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define an interface for the raw database response to avoid type recursion
-interface BookDbRecord {
+// Define simpler interfaces to break type recursion
+interface SimpleOwner {
+  id?: string;
+  name?: string;
+  neighborhood?: string;
+}
+
+interface RawBookData {
   id: string;
   title: string;
   author: string;
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: {
-    id?: string;
-    name?: string;
-    neighborhood?: string;
-  };
+  owner: SimpleOwner;
   google_books_id: string | null;
 }
 
@@ -37,11 +39,11 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Explicitly cast data to break type recursion
-      const bookRecords = data as unknown as BookDbRecord[];
+      // Use a simple type cast to avoid recursion
+      const rawBooks = data as any[];
       
-      // Map to our Book type structure with explicit typing
-      return bookRecords.map((book): Book => ({
+      // Map to our Book type with controlled typing
+      return rawBooks.map(book => ({
         id: book.id,
         title: book.title,
         author: book.author,

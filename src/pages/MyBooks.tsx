@@ -14,14 +14,14 @@ interface BookOwner {
 }
 
 // Define interface for raw book data from database
-interface BookDbRecord {
+interface RawBookData {
   id: string;
   title: string;
   author: string;
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: BookOwner | null;
+  owner: BookOwner;
   google_books_id: string | null;
 }
 
@@ -42,22 +42,22 @@ export default function MyBooks() {
       
       // Transform raw data to Book type using explicit mapping
       return (data || []).map((rawBook) => {
-        // First cast to our intermediate type to handle the database structure
-        const bookRecord = rawBook as unknown as BookDbRecord;
+        // Use type assertion with a simpler intermediate type
+        const book = rawBook as unknown as RawBookData;
         
-        // Then map to the Book interface expected by the components
+        // Explicitly construct the Book object with proper types
         return {
-          id: bookRecord.id,
-          title: bookRecord.title,
-          author: bookRecord.author,
-          coverColor: bookRecord.cover_color,
-          description: bookRecord.description || "",
-          condition: bookRecord.condition,
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          coverColor: book.cover_color,
+          description: book.description || "",
+          condition: book.condition,
           owner: {
-            name: bookRecord.owner?.name || "",
-            neighborhood: bookRecord.owner?.neighborhood || ""
+            name: book.owner?.name || "",
+            neighborhood: book.owner?.neighborhood || ""
           },
-          google_books_id: bookRecord.google_books_id || undefined
+          google_books_id: book.google_books_id || undefined
         };
       });
     },

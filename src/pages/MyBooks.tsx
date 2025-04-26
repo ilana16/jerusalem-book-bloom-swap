@@ -6,6 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
+// Define specific interfaces to avoid recursive type issues
+interface BookOwner {
+  name: string;
+  neighborhood: string;
+}
+
 // Define a simple interface for the raw book data from Supabase
 interface RawBookData {
   id: string;
@@ -14,7 +20,7 @@ interface RawBookData {
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: any; // Use any to avoid deep type recursion error
+  owner: Record<string, unknown>;  // Use Record instead of any/unknown
   google_books_id: string | null;
 }
 
@@ -34,18 +40,9 @@ export default function MyBooks() {
       // Transform raw data to our Book type
       return (data as RawBookData[]).map(book => {
         // Extract owner data safely
-        let ownerName = "";
-        let ownerNeighborhood = "";
-        
-        if (typeof book.owner === 'object' && book.owner !== null) {
-          const ownerObj = book.owner as Record<string, unknown>;
-          if (typeof ownerObj.name === 'string') {
-            ownerName = ownerObj.name;
-          }
-          if (typeof ownerObj.neighborhood === 'string') {
-            ownerNeighborhood = ownerObj.neighborhood;
-          }
-        }
+        const ownerObj = book.owner || {};
+        const ownerName = typeof ownerObj.name === 'string' ? ownerObj.name : "";
+        const ownerNeighborhood = typeof ownerObj.neighborhood === 'string' ? ownerObj.neighborhood : "";
         
         return {
           id: book.id,

@@ -6,55 +6,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Use raw types for Supabase data to avoid type recursion
-type OwnerData = {
-  id?: string;
-  name?: string;
-  neighborhood?: string;
-};
-
-// Separate interface for Supabase's raw book data
-interface SupabaseBookData {
-  id: string;
-  title: string;
-  author: string;
-  cover_color: string;
-  description: string | null;
-  condition: string;
-  owner: OwnerData; // Using a simple type instead of any
-  google_books_id: string | null;
-}
-
 export default function MyBooks() {
   const { user } = useAuth();
 
-  const { data: books = [], isLoading, error } = useQuery<Book[]>({
+  const { data: books = [], isLoading, error } = useQuery({
     queryKey: ['my-books'],
     queryFn: async () => {
-      // Cast the return type explicitly to avoid recursive type inference
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('books')
         .select('*')
-        .eq('owner->id', user?.id);
+        .eq('owner->id', user.id);
       
       if (error) throw error;
       
-      // Explicitly typing the response to break the recursive inference
-      const booksData = data as unknown as SupabaseBookData[];
-      
-      // Map to our Book type with controlled owner structure
-      return (booksData || []).map(book => ({
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        coverColor: book.cover_color,
-        description: book.description || "",
-        condition: book.condition,
+      // Map directly to our Book type structure to avoid type recursion
+      return (data || []).map(book => ({
+        id: book.id as string,
+        title: book.title as string,
+        author: book.author as string,
+        coverColor: book.cover_color as string,
+        description: (book.description as string) || "",
+        condition: book.condition as string,
         owner: {
-          name: book.owner?.name || "",
-          neighborhood: book.owner?.neighborhood || ""
+          name: ((book.owner as any)?.name as string) || "",
+          neighborhood: ((book.owner as any)?.neighborhood as string) || ""
         },
-        google_books_id: book.google_books_id
+        google_books_id: book.google_books_id as string | undefined
       }));
     },
     enabled: !!user

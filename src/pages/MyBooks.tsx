@@ -9,12 +9,14 @@ import { MyBooksList } from "@/components/common/MyBooksList";
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Define the query with explicit types to prevent deep type inference
+  // Use explicit typing and avoid complex type inference
   const { data: books, isLoading, error } = useQuery({
     queryKey: ['my-books'],
-    queryFn: async (): Promise<Book[]> => {
-      if (!user) return [];
+    // Explicitly define the return type of the queryFn
+    queryFn: async () => {
+      if (!user) return [] as Book[];
       
+      // Fetch data from Supabase
       const { data, error } = await supabase
         .from('books')
         .select('*')
@@ -22,34 +24,36 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Create a properly typed array for the results
-      const result: Book[] = [];
-      
-      if (data) {
-        for (const item of data) {
-          // Create each book with explicit type casting
-          const book: Book = {
-            id: String(item.id || ''),
-            title: String(item.title || ''),
-            author: String(item.author || ''),
-            coverColor: String(item.cover_color || '#436B95'),
-            description: item.description ? String(item.description) : "",
-            condition: String(item.condition || 'Good'),
-            owner: {
-              name: getOwnerProperty(item.owner, 'name'),
-              neighborhood: getOwnerProperty(item.owner, 'neighborhood')
-            },
-            google_books_id: item.google_books_id ? String(item.google_books_id) : undefined
-          };
-          
-          result.push(book);
-        }
-      }
-      
-      return result;
+      // Process the data with explicit typing
+      return processBooks(data || []);
     },
     enabled: !!user
   });
+
+  // Move the processing logic to a separate function to reduce complexity in the queryFn
+  function processBooks(data: any[]): Book[] {
+    const result: Book[] = [];
+    
+    for (const item of data) {
+      const book: Book = {
+        id: String(item.id || ''),
+        title: String(item.title || ''),
+        author: String(item.author || ''),
+        coverColor: String(item.cover_color || '#436B95'),
+        description: item.description ? String(item.description) : "",
+        condition: String(item.condition || 'Good'),
+        owner: {
+          name: getOwnerProperty(item.owner, 'name'),
+          neighborhood: getOwnerProperty(item.owner, 'neighborhood')
+        },
+        google_books_id: item.google_books_id ? String(item.google_books_id) : undefined
+      };
+      
+      result.push(book);
+    }
+    
+    return result;
+  }
 
   // Helper function with explicit typing to safely extract owner properties
   function getOwnerProperty(owner: unknown, key: string): string {

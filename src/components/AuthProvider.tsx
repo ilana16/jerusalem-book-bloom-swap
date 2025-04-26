@@ -42,3 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
+// Alias for useAuth to maintain backwards compatibility
+export const useUser = useAuth;

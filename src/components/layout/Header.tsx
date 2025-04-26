@@ -1,7 +1,8 @@
+
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { Book, LogOut, Menu, Search, User, X } from "lucide-react";
+import { Book, BookUser, LogOut, Menu, Search, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +55,10 @@ export function Header() {
                   <Link to="/add" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
                     Add Book
                   </Link>
+                  <Link to="/my-books" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
+                    <BookUser className="mr-2 h-4 w-4 inline" />
+                    My Books
+                  </Link>
                   <Link to="/matches" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
                     Matches
                   </Link>
@@ -90,6 +95,9 @@ export function Header() {
               </Link>
               <Link to="/add" className="px-3 py-2 hover:bg-muted rounded-md text-sm">
                 Add Book
+              </Link>
+              <Link to="/my-books" className="px-3 py-2 hover:bg-muted rounded-md text-sm">
+                My Books
               </Link>
               <Link to="/matches" className="px-3 py-2 hover:bg-muted rounded-md text-sm">
                 Matches

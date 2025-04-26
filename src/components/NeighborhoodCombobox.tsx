@@ -41,6 +41,11 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
     );
   }, [search, neighborhoodsArray]);
 
+  // Prevent the component from rendering if there are no neighborhoods
+  if (!neighborhoodsArray.length) {
+    return null;
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -55,7 +60,7 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command shouldFilter={false}>
+        <Command className="w-full">
           <CommandInput 
             placeholder="Search neighborhood..." 
             value={search}

@@ -14,7 +14,11 @@ interface BookDbRecord {
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: Record<string, unknown> | null;
+  owner: {
+    id?: string;
+    name?: string;
+    neighborhood?: string;
+  } | null;
   google_books_id: string | null;
 }
 
@@ -34,7 +38,7 @@ export default function MyBooks() {
       if (error) throw error;
       
       // Convert raw data to Book type with proper type casting
-      return (data as BookDbRecord[] || []).map((book): Book => ({
+      return (data as BookDbRecord[] || []).map((book) => ({
         id: book.id,
         title: book.title,
         author: book.author,
@@ -42,8 +46,8 @@ export default function MyBooks() {
         description: book.description || "",
         condition: book.condition,
         owner: {
-          name: book.owner && typeof book.owner === 'object' ? String(book.owner['name'] || "") : "",
-          neighborhood: book.owner && typeof book.owner === 'object' ? String(book.owner['neighborhood'] || "") : ""
+          name: book.owner?.name || "",
+          neighborhood: book.owner?.neighborhood || ""
         },
         google_books_id: book.google_books_id || undefined
       }));

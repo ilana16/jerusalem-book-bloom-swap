@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { GoogleBook, searchBooks } from "@/services/googleBooks";
+import { jerusalemNeighborhoods } from "@/data/jerusalemNeighborhoods";
 
 const conditions = ["Like New", "Very Good", "Good", "Fair", "Poor"];
 const neighborhoods = [
@@ -219,7 +219,7 @@ const AddBook = () => {
                       <SelectValue placeholder="Select neighborhood" />
                     </SelectTrigger>
                     <SelectContent>
-                      {neighborhoods.map(neighborhood => (
+                      {jerusalemNeighborhoods.map(neighborhood => (
                         <SelectItem key={neighborhood} value={neighborhood}>
                           {neighborhood}
                         </SelectItem>

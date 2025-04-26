@@ -1,6 +1,6 @@
-
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { jerusalemNeighborhoods } from "@/data/jerusalemNeighborhoods";
 
 const NEIGHBORHOODS = [
   "Baka",
@@ -71,7 +71,7 @@ export function NeighborhoodFilter({
         <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
           <div className="p-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-              {NEIGHBORHOODS.map(neighborhood => (
+              {jerusalemNeighborhoods.map(neighborhood => (
                 <div
                   key={neighborhood}
                   className="flex items-center px-2 py-1 rounded-sm hover:bg-muted cursor-pointer"

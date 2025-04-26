@@ -1,17 +1,5 @@
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { jerusalemNeighborhoods } from "@/data/jerusalemNeighborhoods";
-
-interface NeighborhoodSelectProps {
-  value?: string | null;
-  onSelect: (value: string) => void;
-}
 
 export function NeighborhoodSelect({ value, onSelect }: NeighborhoodSelectProps) {
   return (
@@ -29,3 +17,4 @@ export function NeighborhoodSelect({ value, onSelect }: NeighborhoodSelectProps)
     </Select>
   );
 }
+

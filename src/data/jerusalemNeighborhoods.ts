@@ -1,5 +1,4 @@
 
-// An array of Jerusalem neighborhoods
 export const jerusalemNeighborhoods = [
   'Abu Tor',
   'American Colony',

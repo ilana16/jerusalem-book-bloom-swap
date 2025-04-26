@@ -26,12 +26,14 @@ const Books = () => {
         );
       }
       
-      // Fixed neighborhood filtering logic
+      // Fixed neighborhood filtering logic - using contains operator for JSON
       if (selectedNeighborhoods.length > 0) {
-        // Using a more compatible approach for JSON column filtering
-        selectedNeighborhoods.forEach(neighborhood => {
-          query = query.or(`owner->neighborhood.eq.${neighborhood}`);
-        });
+        const neighborhoodConditions = selectedNeighborhoods.map(neighborhood => 
+          // Use single quotes around the neighborhood string value
+          `owner->>neighborhood='${neighborhood}'`
+        ).join(',');
+        
+        query = query.or(neighborhoodConditions);
       }
 
       const { data, error } = await query;

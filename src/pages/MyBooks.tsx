@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define owner structure separately to avoid recursion
+// Define simple owner structure to avoid recursion
 interface BookOwner {
   id?: string;
   name?: string;
@@ -40,8 +40,8 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Convert raw data to Book type with proper type casting
-      return (data as unknown as BookDbRecord[] || []).map((book) => ({
+      // Convert the raw data to Book type with explicit casting
+      return (data || []).map((book: any) => ({
         id: book.id,
         title: book.title,
         author: book.author,

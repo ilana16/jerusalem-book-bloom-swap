@@ -6,7 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define a simple type for book data from Supabase
+// Use raw types for Supabase data to avoid type recursion
+type OwnerData = {
+  id?: string;
+  name?: string;
+  neighborhood?: string;
+};
+
+// Separate interface for Supabase's raw book data
 interface SupabaseBookData {
   id: string;
   title: string;
@@ -14,7 +21,7 @@ interface SupabaseBookData {
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: any; // Using 'any' here to break the deep type instantiation
+  owner: OwnerData; // Using a simple type instead of any
   google_books_id: string | null;
 }
 
@@ -24,6 +31,7 @@ export default function MyBooks() {
   const { data: books = [], isLoading, error } = useQuery<Book[]>({
     queryKey: ['my-books'],
     queryFn: async () => {
+      // Cast the return type explicitly to avoid recursive type inference
       const { data, error } = await supabase
         .from('books')
         .select('*')
@@ -31,8 +39,11 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Map the data to our Book type, carefully handling the owner data to avoid type recursion
-      return (data as SupabaseBookData[] || []).map(book => ({
+      // Explicitly typing the response to break the recursive inference
+      const booksData = data as unknown as SupabaseBookData[];
+      
+      // Map to our Book type with controlled owner structure
+      return (booksData || []).map(book => ({
         id: book.id,
         title: book.title,
         author: book.author,

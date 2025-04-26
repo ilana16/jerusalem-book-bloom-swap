@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Check, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export function NeighborhoodSelect({ value, onChange }: NeighborhoodSelectProps)
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Ensure jerusalemNeighborhoods is always an array with fallback
+  // Ensure jerusalemNeighborhoods is always an array
   const neighborhoods = Array.isArray(jerusalemNeighborhoods) ? jerusalemNeighborhoods : [];
   
   // Filter neighborhoods based on search

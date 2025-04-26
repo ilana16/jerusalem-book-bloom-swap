@@ -6,25 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define the owner structure with simple types to avoid recursion
-interface BookOwner {
-  id?: string;
-  name?: string;
-  neighborhood?: string;
-}
-
-// Define simplified interface for raw book data from database
-interface RawBookData {
-  id: string;
-  title: string;
-  author: string;
-  cover_color: string;
-  description: string | null;
-  condition: string;
-  owner: Record<string, any>; // Use Record type to avoid deep type instantiation
-  google_books_id: string | null;
-}
-
 export default function MyBooks() {
   const { user } = useAuth();
 
@@ -41,23 +22,19 @@ export default function MyBooks() {
       if (error) throw error;
       
       // Transform raw data to Book type using explicit mapping
-      return (data || []).map((rawBook) => {
-        // Cast to any first to avoid TypeScript recursion issues
-        const rawData = rawBook as any;
-        
-        // Explicitly construct the Book object with proper types
+      return (data || []).map((rawBook: any) => {
         return {
-          id: rawData.id,
-          title: rawData.title,
-          author: rawData.author,
-          coverColor: rawData.cover_color,
-          description: rawData.description || "",
-          condition: rawData.condition,
+          id: rawBook.id,
+          title: rawBook.title,
+          author: rawBook.author,
+          coverColor: rawBook.cover_color,
+          description: rawBook.description || "",
+          condition: rawBook.condition,
           owner: {
-            name: rawData.owner?.name || "",
-            neighborhood: rawData.owner?.neighborhood || ""
+            name: rawBook.owner?.name || "",
+            neighborhood: rawBook.owner?.neighborhood || ""
           },
-          google_books_id: rawData.google_books_id || undefined
+          google_books_id: rawBook.google_books_id || undefined
         };
       });
     },

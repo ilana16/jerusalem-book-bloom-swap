@@ -6,10 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define specific interfaces to avoid recursive type issues
-interface BookOwner {
-  name: string;
-  neighborhood: string;
+// Define a simple type for book data from Supabase
+interface SupabaseBookData {
+  id: string;
+  title: string;
+  author: string;
+  cover_color: string;
+  description: string | null;
+  condition: string;
+  owner: any; // Using 'any' here to break the deep type instantiation
+  google_books_id: string | null;
 }
 
 export default function MyBooks() {
@@ -25,25 +31,20 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform data to our Book type, avoiding recursive types
-      return (data || []).map(book => {
-        // Safely extract owner data
-        const rawOwner = book.owner as { name?: string; neighborhood?: string } || {};
-        
-        return {
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          coverColor: book.cover_color,
-          description: book.description || "",
-          condition: book.condition,
-          owner: {
-            name: rawOwner.name || "",
-            neighborhood: rawOwner.neighborhood || ""
-          },
-          google_books_id: book.google_books_id
-        };
-      });
+      // Map the data to our Book type, carefully handling the owner data to avoid type recursion
+      return (data as SupabaseBookData[] || []).map(book => ({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        coverColor: book.cover_color,
+        description: book.description || "",
+        condition: book.condition,
+        owner: {
+          name: book.owner?.name || "",
+          neighborhood: book.owner?.neighborhood || ""
+        },
+        google_books_id: book.google_books_id
+      }));
     },
     enabled: !!user
   });

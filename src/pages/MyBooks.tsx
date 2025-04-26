@@ -9,11 +9,10 @@ import { MyBooksList } from "@/components/common/MyBooksList";
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Use explicit typing and avoid complex type inference
-  const { data: books, isLoading, error } = useQuery({
+  // Use explicit return type annotation for the whole query
+  const { data: books, isLoading, error } = useQuery<Book[], Error>({
     queryKey: ['my-books'],
-    // Explicitly define the return type of the queryFn
-    queryFn: async () => {
+    queryFn: async (): Promise<Book[]> => {
       if (!user) return [] as Book[];
       
       // Fetch data from Supabase

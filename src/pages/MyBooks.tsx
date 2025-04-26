@@ -9,11 +9,11 @@ import { MyBooksList } from "@/components/common/MyBooksList";
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Completely avoid type inference by using an object literal type
-  const { data: books = [], isLoading, error } = useQuery({
+  // Using explicit typing and avoiding complex inference
+  const { data: books, isLoading, error } = useQuery({
     queryKey: ['my-books'],
-    queryFn: async () => {
-      if (!user) return [] as Book[];
+    queryFn: async (): Promise<Book[]> => {
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from('books')
@@ -22,29 +22,28 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to Book objects without relying on TypeScript inference
-      const transformedBooks: Book[] = [];
-      for (const rawBook of (data || [])) {
-        transformedBooks.push({
-          id: String(rawBook.id),
-          title: String(rawBook.title),
-          author: String(rawBook.author),
-          coverColor: String(rawBook.cover_color),
-          description: rawBook.description ? String(rawBook.description) : "",
-          condition: String(rawBook.condition),
-          owner: {
-            name: typeof rawBook.owner === 'object' && rawBook.owner && 'name' in rawBook.owner 
-              ? String(rawBook.owner.name) 
-              : "",
-            neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && 'neighborhood' in rawBook.owner 
-              ? String(rawBook.owner.neighborhood) 
-              : ""
-          },
-          google_books_id: rawBook.google_books_id ? String(rawBook.google_books_id) : undefined
-        });
+      // Transform raw data to Book objects with simpler approach
+      const result: Book[] = [];
+      if (data) {
+        for (let i = 0; i < data.length; i++) {
+          const book = data[i];
+          result.push({
+            id: String(book.id),
+            title: String(book.title),
+            author: String(book.author),
+            coverColor: String(book.cover_color),
+            description: book.description ? String(book.description) : "",
+            condition: String(book.condition),
+            owner: {
+              name: book.owner && typeof book.owner === 'object' ? String(book.owner.name || "") : "",
+              neighborhood: book.owner && typeof book.owner === 'object' ? String(book.owner.neighborhood || "") : "",
+            },
+            google_books_id: book.google_books_id ? String(book.google_books_id) : undefined
+          });
+        }
       }
       
-      return transformedBooks;
+      return result;
     },
     enabled: !!user
   });
@@ -74,7 +73,7 @@ export default function MyBooks() {
             <p className="text-lg text-red-600">Error loading your books</p>
           </div>
         ) : (
-          <MyBooksList books={books} />
+          <MyBooksList books={books || []} />
         )}
       </div>
     </Layout>

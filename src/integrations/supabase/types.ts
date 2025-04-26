@@ -9,6 +9,113 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      books: {
+        Row: {
+          author: string
+          condition: string
+          cover_color: string
+          created_at: string
+          description: string | null
+          id: string
+          owner: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          condition?: string
+          cover_color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          owner: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          condition?: string
+          cover_color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          owner?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chats: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          id: string
+          last_message: string | null
+          last_message_time: string
+          name: string
+          unread: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_time?: string
+          name: string
+          unread?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_time?: string
+          name?: string
+          unread?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          sender: string
+          text: string
+          timestamp: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          sender: string
+          text: string
+          timestamp?: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          sender?: string
+          text?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

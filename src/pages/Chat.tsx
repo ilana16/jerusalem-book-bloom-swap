@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
+interface ChatContact {
+  id: string;
+  name: string;
+  lastMessage: string | null;
+  lastMessageTime: string;
+  unread: boolean;
+  avatar: string | null;
+  messages: Message[];
+}
+
 interface Message {
   id: string;
   text: string;
@@ -16,43 +25,32 @@ interface Message {
   timestamp: string;
 }
 
-interface ChatContact {
-  id: string;
-  name: string;
-  lastMessage: string;
-  lastMessageTime: string;
-  unread: boolean;
-  avatar: string;
-  messages: Message[];
-}
-
 const Chat = () => {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
 
-  const { 
-    data: contacts = [], 
-    isLoading, 
-    error 
-  } = useQuery<ChatContact[]>({
+  const { data: contacts = [], isLoading, error } = useQuery<ChatContact[]>({
     queryKey: ['chats'],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      if (!user.user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase
         .from('chats')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      return data || [];
+      return (data || []).map(chat => ({
+        id: chat.id,
+        name: chat.name,
+        lastMessage: chat.last_message,
+        lastMessageTime: chat.last_message_time,
+        unread: chat.unread,
+        avatar: chat.avatar,
+        messages: [] // We'll load messages separately when a chat is selected
+      }));
     }
   });
 

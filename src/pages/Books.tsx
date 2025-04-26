@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { BookList } from "@/components/common/BookList";
 import { NeighborhoodFilter } from "@/components/common/NeighborhoodFilter";
@@ -27,16 +27,22 @@ const Books = () => {
       }
       
       if (selectedNeighborhoods.length > 0) {
-        query = query.in('owner->>neighborhood', selectedNeighborhoods);
+        query = query.filter('owner->neighborhood', 'in', `(${selectedNeighborhoods.join(',')})`);
       }
 
       const { data, error } = await query;
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      return data || [];
+      return (data || []).map(book => ({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        coverColor: book.cover_color,
+        description: book.description || "",
+        condition: book.condition,
+        owner: book.owner as { name: string; neighborhood: string }
+      }));
     }
   });
 

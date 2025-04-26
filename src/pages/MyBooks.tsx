@@ -40,20 +40,23 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Convert the raw data to Book type with explicit casting
-      return (data || []).map((book: any) => ({
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        coverColor: book.cover_color,
-        description: book.description || "",
-        condition: book.condition,
-        owner: {
-          name: book.owner?.name || "",
-          neighborhood: book.owner?.neighborhood || ""
-        },
-        google_books_id: book.google_books_id || undefined
-      }));
+      // Transform raw data to Book type
+      return (data || []).map((rawBook) => {
+        const book = rawBook as any;
+        return {
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          coverColor: book.cover_color,
+          description: book.description || "",
+          condition: book.condition,
+          owner: {
+            name: book.owner?.name || "",
+            neighborhood: book.owner?.neighborhood || ""
+          },
+          google_books_id: book.google_books_id || undefined
+        };
+      });
     },
     enabled: !!user
   });

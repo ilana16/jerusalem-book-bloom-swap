@@ -4,11 +4,12 @@ import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User } from "lucide-react";
+import { NeighborhoodCombobox } from "@/components/NeighborhoodCombobox";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -104,10 +105,9 @@ const Profile = () => {
               className="min-h-[120px]"
             />
             
-            <Input 
-              placeholder="Neighborhood" 
+            <NeighborhoodCombobox
               value={profile.neighborhood}
-              onChange={(e) => setProfile({...profile, neighborhood: e.target.value})}
+              onChange={(value) => setProfile({...profile, neighborhood: value})}
             />
           </div>
           

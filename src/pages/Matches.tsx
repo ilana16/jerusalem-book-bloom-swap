@@ -1,11 +1,13 @@
 
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { BookCard, Book } from "@/components/common/BookCard";
-import { mockMatches } from "@/data/mockMatches";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface MatchGroup {
   user: {
@@ -19,6 +21,35 @@ interface MatchGroup {
 }
 
 const Matches = () => {
+  const { data: matches = [], isLoading, error } = useQuery<MatchGroup[]>({
+    queryKey: ['matches'],
+    queryFn: async () => {
+      // This is a placeholder. In a real implementation, you'd create a function 
+      // in Supabase or your backend to generate these matches
+      const { data: currentUserBooks, error: booksError } = await supabase
+        .from('books')
+        .select('*')
+        .eq('owner->id', supabase.auth.getUser()?.id);
+
+      if (booksError) {
+        throw booksError;
+      }
+
+      // Placeholder match generation logic
+      const { data: potentialMatches, error: matchError } = await supabase
+        .from('books')
+        .select('*')
+        .neq('owner->id', supabase.auth.getUser()?.id);
+
+      if (matchError) {
+        throw matchError;
+      }
+
+      // Implement match generation logic here
+      return []; // Return actual matches
+    }
+  });
+
   const handleRequestSwap = (bookId: string) => {
     toast({
       title: "Swap requested",
@@ -33,6 +64,14 @@ const Matches = () => {
     });
   };
 
+  if (isLoading) {
+    return <div>Loading matches...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading matches</div>;
+  }
+
   return (
     <Layout>
       <div className="page-container">
@@ -43,7 +82,7 @@ const Matches = () => {
           Higher match scores indicate more opportunities to swap multiple books with the same person.
         </p>
 
-        {mockMatches.length === 0 ? (
+        {matches.length === 0 ? (
           <div className="bg-white border border-border rounded-lg p-8 text-center">
             <h2 className="text-xl font-bold mb-3">No Matches Found Yet</h2>
             <p className="text-muted-foreground mb-6">
@@ -69,7 +108,7 @@ const Matches = () => {
           </div>
         ) : (
           <div className="space-y-10">
-            {mockMatches.map((match) => (
+            {matches.map((match) => (
               <div key={match.user.id} className="bg-white border border-border rounded-lg overflow-hidden">
                 <div className="bg-bookswap-blue p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center">
                   <div>

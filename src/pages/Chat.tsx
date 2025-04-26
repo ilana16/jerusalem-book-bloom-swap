@@ -1,11 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { mockChats } from "@/data/mockChats";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "@/components/ui/use-toast";
 
 interface Message {
   id: string;
@@ -25,27 +27,85 @@ interface ChatContact {
 }
 
 const Chat = () => {
-  const [contacts] = useState<ChatContact[]>(mockChats as ChatContact[]);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(
-    contacts.length > 0 ? contacts[0].id : null
-  );
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
+
+  const { 
+    data: contacts = [], 
+    isLoading, 
+    error 
+  } = useQuery<ChatContact[]>({
+    queryKey: ['chats'],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    }
+  });
+
+  useEffect(() => {
+    if (contacts.length > 0 && !selectedContactId) {
+      setSelectedContactId(contacts[0].id);
+    }
+  }, [contacts]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!messageText.trim() || !selectedContactId) return;
+    
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: selectedContactId,
+          text: messageText,
+          sender_id: user?.user?.id,
+          timestamp: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
+      
+      // Clear the input
+      setMessageText("");
+    } catch (err) {
+      toast({
+        title: "Error sending message",
+        description: "Unable to send message. Please try again.",
+        variant: "destructive"
+      });
+      console.error(err);
+    }
+  };
 
   const selectedContact = contacts.find(
     (contact) => contact.id === selectedContactId
   );
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!messageText.trim() || !selectedContactId) return;
-    
-    // In a real app, we would send this message to a backend
-    console.log("Sending message:", messageText);
-    
-    // Clear the input
-    setMessageText("");
-  };
+  if (isLoading) {
+    return <div>Loading chats...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading chats</div>;
+  }
 
   return (
     <Layout>

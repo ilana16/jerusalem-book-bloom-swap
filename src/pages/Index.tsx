@@ -1,14 +1,37 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Book, ArrowRight } from "lucide-react";
 import { BookList } from "@/components/common/BookList";
-import { mockBooks } from "@/data/mockBooks";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Book as BookType } from "@/components/common/BookCard";
 
 const Index = () => {
-  // Show only 5 featured books on the homepage
-  const featuredBooks = mockBooks.slice(0, 5);
+  const { data: featuredBooks = [], isLoading, error } = useQuery<BookType[]>({
+    queryKey: ['featuredBooks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data || [];
+    }
+  });
+
+  if (isLoading) {
+    return <div>Loading featured books...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading featured books</div>;
+  }
 
   return (
     <Layout>

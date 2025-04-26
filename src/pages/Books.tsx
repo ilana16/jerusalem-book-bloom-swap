@@ -1,30 +1,54 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { BookList } from "@/components/common/BookList";
-import { mockBooks } from "@/data/mockBooks";
 import { NeighborhoodFilter } from "@/components/common/NeighborhoodFilter";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Book } from "@/components/common/BookCard";
 
 const Books = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
 
-  const filteredBooks = mockBooks.filter(book => {
-    const matchesSearch = 
-      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesNeighborhood = 
-      selectedNeighborhoods.length === 0 || 
-      selectedNeighborhoods.includes(book.owner.neighborhood);
-    
-    return matchesSearch && matchesNeighborhood;
+  const { data: books = [], isLoading, error } = useQuery<Book[]>({
+    queryKey: ['books', searchTerm, selectedNeighborhoods],
+    queryFn: async () => {
+      let query = supabase.from('books').select('*');
+      
+      if (searchTerm) {
+        query = query.or(
+          `title.ilike.%${searchTerm}%,author.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
+        );
+      }
+      
+      if (selectedNeighborhoods.length > 0) {
+        query = query.in('owner->>neighborhood', selectedNeighborhoods);
+      }
+
+      const { data, error } = await query;
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data || [];
+    }
   });
+
+  const filteredBooks = books;
+
+  if (isLoading) {
+    return <div>Loading books...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading books</div>;
+  }
 
   return (
     <Layout>
@@ -60,7 +84,7 @@ const Books = () => {
 
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredBooks.length} of {mockBooks.length} books
+            Showing {filteredBooks.length} of {filteredBooks.length} books
           </p>
         </div>
 

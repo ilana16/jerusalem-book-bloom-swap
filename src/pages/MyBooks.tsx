@@ -12,40 +12,12 @@ interface BookOwner {
   neighborhood: string;
 }
 
-// Define a simple interface for the raw book data from Supabase
-interface RawBookData {
-  id: string;
-  title: string;
-  author: string;
-  cover_color: string;
-  description: string | null;
-  condition: string;
-  owner: {
-    id?: string;
-    name?: string;
-    neighborhood?: string;
-  };
-  google_books_id: string | null;
-}
-
 export default function MyBooks() {
   const { user } = useAuth();
 
   const { data: books = [], isLoading, error } = useQuery<Book[]>({
     queryKey: ['my-books'],
     queryFn: async () => {
-      // Explicitly cast the data to avoid type recursion
-      type SafeDataType = Array<{
-        id: string;
-        title: string;
-        author: string;
-        cover_color: string;
-        description: string | null;
-        condition: string;
-        owner: unknown;
-        google_books_id: string | null;
-      }>;
-      
       const { data, error } = await supabase
         .from('books')
         .select('*')
@@ -53,10 +25,10 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to our Book type
-      return (data as SafeDataType).map(book => {
-        // Extract owner data safely using type assertions
-        const ownerObj = book.owner as Record<string, unknown> || {};
+      // Transform data to our Book type, avoiding recursive types
+      return (data || []).map(book => {
+        // Safely extract owner data
+        const rawOwner = book.owner as { name?: string; neighborhood?: string } || {};
         
         return {
           id: book.id,
@@ -66,8 +38,8 @@ export default function MyBooks() {
           description: book.description || "",
           condition: book.condition,
           owner: {
-            name: typeof ownerObj.name === 'string' ? ownerObj.name : "",
-            neighborhood: typeof ownerObj.neighborhood === 'string' ? ownerObj.neighborhood : ""
+            name: rawOwner.name || "",
+            neighborhood: rawOwner.neighborhood || ""
           },
           google_books_id: book.google_books_id
         };

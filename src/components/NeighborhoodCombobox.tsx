@@ -24,12 +24,17 @@ interface NeighborhoodComboboxProps {
 
 export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  
-  // Ensure the neighborhoods array is always defined with a fallback empty array
-  const neighborhoods = jerusalemNeighborhoods || [];
+  const [search, setSearch] = React.useState("");
 
-  // Create a memoized filtered list to prevent re-renders
-  const items = React.useMemo(() => neighborhoods, []);
+  // Filter neighborhoods based on search input
+  const filteredItems = React.useMemo(() => {
+    const neighborhoods = jerusalemNeighborhoods || [];
+    if (!search) return neighborhoods;
+    
+    return neighborhoods.filter((neighborhood) =>
+      neighborhood.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -45,17 +50,22 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search neighborhood..." />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder="Search neighborhood..." 
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandEmpty>No neighborhood found.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
-            {items.map((neighborhood) => (
+            {filteredItems.map((neighborhood) => (
               <CommandItem
                 key={neighborhood}
                 value={neighborhood}
                 onSelect={() => {
                   onChange(neighborhood);
                   setOpen(false);
+                  setSearch("");
                 }}
               >
                 <Check

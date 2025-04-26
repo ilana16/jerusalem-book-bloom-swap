@@ -6,18 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define a simple interface for raw data from Supabase
-interface RawBookData {
-  id: string;
-  title: string;
-  author: string;
-  cover_color: string;
-  description: string | null;
-  condition: string;
-  owner: any; // Using any to avoid TypeScript recursion
-  google_books_id: string | null;
-}
-
+// We'll simplify the approach by removing complex type definitions
 export default function MyBooks() {
   const { user } = useAuth();
 
@@ -33,10 +22,10 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform data with explicit type safety
-      return (data as RawBookData[] || []).map((rawBook) => {
-        // Create a properly typed Book object
-        const book: Book = {
+      // Transform data with simpler approach to avoid deep type instantiation
+      return (data || []).map((rawBook: any) => {
+        // Create a Book object with explicit properties to avoid TypeScript recursion
+        return {
           id: rawBook.id,
           title: rawBook.title,
           author: rawBook.author,
@@ -44,14 +33,13 @@ export default function MyBooks() {
           description: rawBook.description || "",
           condition: rawBook.condition,
           owner: {
-            name: typeof rawBook.owner === 'object' && rawBook.owner ? 
-                  (rawBook.owner.name || "") : "",
-            neighborhood: typeof rawBook.owner === 'object' && rawBook.owner ? 
-                         (rawBook.owner.neighborhood || "") : ""
+            name: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.name ? 
+                 rawBook.owner.name : "",
+            neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.neighborhood ? 
+                 rawBook.owner.neighborhood : ""
           },
           google_books_id: rawBook.google_books_id || undefined
         };
-        return book;
       });
     },
     enabled: !!user

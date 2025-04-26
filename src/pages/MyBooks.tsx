@@ -12,7 +12,7 @@ export default function MyBooks() {
   const { data: books, isLoading, error } = useQuery({
     queryKey: ['my-books'],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) return [] as Book[];
       
       // Fetch books from Supabase
       const { data, error } = await supabase
@@ -27,8 +27,16 @@ export default function MyBooks() {
       
       if (data) {
         for (const book of data) {
-          // Use a simpler approach to handle owner data
-          const owner = typeof book.owner === 'object' ? book.owner : {};
+          // Extract owner data safely
+          let ownerName = '';
+          let ownerNeighborhood = '';
+          
+          if (book.owner && typeof book.owner === 'object') {
+            // Type assertion to make TypeScript happy
+            const ownerObj = book.owner as Record<string, any>;
+            ownerName = typeof ownerObj.name === 'string' ? ownerObj.name : '';
+            ownerNeighborhood = typeof ownerObj.neighborhood === 'string' ? ownerObj.neighborhood : '';
+          }
           
           result.push({
             id: String(book.id || ''),
@@ -38,8 +46,8 @@ export default function MyBooks() {
             description: book.description ? String(book.description) : "",
             condition: String(book.condition || 'Good'),
             owner: {
-              name: owner && 'name' in owner ? String(owner.name || '') : '',
-              neighborhood: owner && 'neighborhood' in owner ? String(owner.neighborhood || '') : '',
+              name: ownerName,
+              neighborhood: ownerNeighborhood,
             },
             google_books_id: book.google_books_id ? String(book.google_books_id) : undefined
           });

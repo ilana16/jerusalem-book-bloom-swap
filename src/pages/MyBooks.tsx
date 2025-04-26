@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/components/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
@@ -9,12 +8,11 @@ import { MyBooksList } from "@/components/common/MyBooksList";
 export default function MyBooks() {
   const { user } = useAuth();
 
-  const { data: books, isLoading, error } = useQuery({
+  const { data: books, isLoading, error } = useQuery<Book[]>({
     queryKey: ['my-books'],
     queryFn: async () => {
       if (!user) return [] as Book[];
       
-      // Fetch books from Supabase
       const { data, error } = await supabase
         .from('books')
         .select('*')
@@ -22,12 +20,10 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to Book objects
       const result: Book[] = [];
       
       if (data) {
         for (const book of data) {
-          // Create a typed book object without complex nested inference
           result.push({
             id: String(book.id || ''),
             title: String(book.title || ''),
@@ -49,7 +45,6 @@ export default function MyBooks() {
     enabled: !!user
   });
 
-  // Helper function to safely extract string values from potentially complex objects
   function getStringValue(obj: any, key: string): string {
     if (!obj || typeof obj !== 'object') return '';
     return typeof obj[key] === 'string' ? obj[key] : '';

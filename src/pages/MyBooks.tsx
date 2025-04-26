@@ -21,9 +21,9 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to Book type using explicit mapping
-      return (data || []).map((rawBook: any) => {
-        return {
+      // Transform data using explicit type casting to avoid deep type instantiation
+      return (data || []).map((rawBook) => {
+        const book: Book = {
           id: rawBook.id,
           title: rawBook.title,
           author: rawBook.author,
@@ -36,6 +36,7 @@ export default function MyBooks() {
           },
           google_books_id: rawBook.google_books_id || undefined
         };
+        return book;
       });
     },
     enabled: !!user

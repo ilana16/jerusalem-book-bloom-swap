@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { mockChats } from "@/data/mockChats";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -24,7 +25,7 @@ interface ChatContact {
 }
 
 const Chat = () => {
-  const [contacts] = useState<ChatContact[]>(mockChats);
+  const [contacts] = useState<ChatContact[]>(mockChats as ChatContact[]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     contacts.length > 0 ? contacts[0].id : null
   );

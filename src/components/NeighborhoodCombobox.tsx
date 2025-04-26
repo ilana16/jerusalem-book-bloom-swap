@@ -26,15 +26,20 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
+  // Ensure jerusalemNeighborhoods is always an array
+  const neighborhoodsArray = React.useMemo(() => 
+    Array.isArray(jerusalemNeighborhoods) ? jerusalemNeighborhoods : [], 
+    []
+  );
+
   // Filter neighborhoods based on search input
   const filteredItems = React.useMemo(() => {
-    const neighborhoods = jerusalemNeighborhoods || [];
-    if (!search) return neighborhoods;
+    if (!search) return neighborhoodsArray;
     
-    return neighborhoods.filter((neighborhood) =>
+    return neighborhoodsArray.filter((neighborhood) =>
       neighborhood.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search]);
+  }, [search, neighborhoodsArray]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -62,8 +67,8 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
               <CommandItem
                 key={neighborhood}
                 value={neighborhood}
-                onSelect={() => {
-                  onChange(neighborhood);
+                onSelect={(currentValue) => {
+                  onChange(currentValue);
                   setOpen(false);
                   setSearch("");
                 }}

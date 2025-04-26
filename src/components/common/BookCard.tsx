@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { getBookById } from "@/services/googleBooks";
+import { useQuery } from "@tanstack/react-query";
 
 export interface Book {
   id: string;
@@ -13,6 +15,7 @@ export interface Book {
     name: string;
     neighborhood: string;
   };
+  google_books_id?: string;
 }
 
 interface BookCardProps {
@@ -23,9 +26,17 @@ interface BookCardProps {
 export function BookCard({ book, onRequestSwap }: BookCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
+  const { data: googleBook } = useQuery({
+    queryKey: ['book', book.google_books_id],
+    queryFn: () => book.google_books_id ? getBookById(book.google_books_id) : null,
+    enabled: !!book.google_books_id,
+  });
+
   const toggleFlip = () => {
     setIsFlipped(!isFlipped);
   };
+
+  const coverImage = googleBook?.volumeInfo.imageLinks?.thumbnail;
 
   return (
     <div 
@@ -36,15 +47,31 @@ export function BookCard({ book, onRequestSwap }: BookCardProps) {
         className="book-card-inner" 
         style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0)' }}
       >
-        <div 
-          className="book-spine" 
-          style={{ backgroundColor: book.coverColor || '#436B95' }}
-        >
-          <div className="text-white p-4 text-center">
-            <h3 className="font-bold truncate max-w-[180px]">{book.title}</h3>
-            <p className="text-sm opacity-80">{book.author}</p>
+        {coverImage ? (
+          <div 
+            className="book-spine"
+            style={{ 
+              backgroundImage: `url(${coverImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="text-white p-4 text-center bg-black/50 backdrop-blur-sm">
+              <h3 className="font-bold truncate max-w-[180px]">{book.title}</h3>
+              <p className="text-sm opacity-80">{book.author}</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div 
+            className="book-spine" 
+            style={{ backgroundColor: book.coverColor }}
+          >
+            <div className="text-white p-4 text-center">
+              <h3 className="font-bold truncate max-w-[180px]">{book.title}</h3>
+              <p className="text-sm opacity-80">{book.author}</p>
+            </div>
+          </div>
+        )}
         
         <div className="book-details">
           <h3 className="font-bold text-lg mb-1">{book.title}</h3>

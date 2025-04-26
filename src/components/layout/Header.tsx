@@ -1,16 +1,30 @@
-
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { Book, Menu, Search, User, X } from "lucide-react";
+import { Book, LogOut, Menu, Search, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export function Header() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(error.message);
+    } else {
+      navigate("/");
+    }
   };
 
   return (
@@ -49,6 +63,16 @@ export function Header() {
                   <Link to="/profile" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
                     My Profile
                   </Link>
+                  {user ? (
+                    <Button variant="ghost" onClick={handleLogout} className="justify-start">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Button>
+                  ) : (
+                    <Link to="/auth" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
+                      Sign In
+                    </Link>
+                  )}
                 </nav>
               </div>
             )}
@@ -76,9 +100,20 @@ export function Header() {
               <Button variant="ghost" size="icon">
                 <Search className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon">
-                <User className="h-4 w-4" />
-              </Button>
+              {user ? (
+                <>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <Button variant="default" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              )}
             </div>
           </div>
         )}

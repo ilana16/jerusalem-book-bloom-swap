@@ -24,6 +24,9 @@ interface NeighborhoodComboboxProps {
 
 export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  
+  // Ensure the neighborhoods array is always defined with a fallback empty array
+  const neighborhoods = jerusalemNeighborhoods || [];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,7 +46,7 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
           <CommandInput placeholder="Search neighborhood..." />
           <CommandEmpty>No neighborhood found.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
-            {jerusalemNeighborhoods.map((neighborhood) => (
+            {neighborhoods.map((neighborhood) => (
               <CommandItem
                 key={neighborhood}
                 onSelect={() => {

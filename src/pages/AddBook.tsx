@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -6,49 +7,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { GoogleBook, searchBooks } from "@/services/googleBooks";
 import { jerusalemNeighborhoods } from "@/data/jerusalemNeighborhoods";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/components/AuthProvider";
 
 const conditions = ["Like New", "Very Good", "Good", "Fair", "Poor"];
-const neighborhoods = [
-  "Baka",
-  "German Colony",
-  "Katamon",
-  "Rehavia",
-  "City Center",
-  "Talpiot",
-  "Arnona",
-  "French Hill",
-  "Ramot",
-  "Gilo",
-  "Pisgat Ze'ev",
-  "Har Nof",
-  "Bayit Vegan",
-  "Nachlaot",
-  "Kiryat Moshe",
-  "Old City"
-];
-
-const coverColors = [
-  { name: "Blue", value: "#436B95" },
-  { name: "Green", value: "#4A6741" },
-  { name: "Red", value: "#9C4A41" },
-  { name: "Purple", value: "#5D4A9C" },
-  { name: "Orange", value: "#BC6C25" },
-  { name: "Teal", value: "#2A9D8F" },
-];
 
 const AddBook = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<GoogleBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<GoogleBook | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     condition: "",
     neighborhood: "",
-    coverColor: "#436B95"
   });
 
   const handleSearch = async () => {
@@ -58,7 +35,9 @@ const AddBook = () => {
     try {
       const results = await searchBooks(searchQuery);
       setSearchResults(results);
+      console.log('Search results:', results);
     } catch (error) {
+      console.error('Search error:', error);
       toast.error("Error searching for books");
     } finally {
       setIsSearching(false);
@@ -66,39 +45,56 @@ const AddBook = () => {
   };
 
   const handleBookSelect = (book: GoogleBook) => {
+    console.log('Selected book:', book);
     setSelectedBook(book);
     setSearchResults([]);
     setSearchQuery("");
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleColorSelect = (color: string) => {
-    setFormData(prev => ({ ...prev, coverColor: color }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBook) {
-      toast.error("Please select a book first");
-      return;
-    }
-    if (!formData.condition || !formData.neighborhood) {
+    if (!selectedBook || !formData.condition || !formData.neighborhood || !user) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    // In a real app, we would send this data to the backend
-    toast.success("Book added successfully!");
-    navigate("/books");
+    setIsSubmitting(true);
+    try {
+      const bookData = {
+        title: selectedBook.volumeInfo.title,
+        author: selectedBook.volumeInfo.authors?.[0] || "Unknown Author",
+        description: selectedBook.volumeInfo.description || "",
+        cover_image: selectedBook.volumeInfo.imageLinks?.thumbnail || "",
+        condition: formData.condition,
+        owner: {
+          id: user.id,
+          name: user.email,
+          neighborhood: formData.neighborhood
+        },
+        google_books_id: selectedBook.id,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('books').insert([bookData]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success("Book added successfully!");
+      navigate("/books");
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error("Error adding book");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Layout>
       <div className="page-container max-w-3xl mx-auto">
-        <h1 className="section-heading">Add Your Book</h1>
+        <h1 className="text-3xl font-bold mb-8">Add Your Book</h1>
         
         <div className="bg-white border border-border rounded-lg p-6 md:p-8">
           <form onSubmit={handleSubmit}>
@@ -118,7 +114,11 @@ const AddBook = () => {
                     onClick={handleSearch}
                     disabled={isSearching}
                   >
-                    <Search className="w-4 h-4 mr-2" />
+                    {isSearching ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4 mr-2" />
+                    )}
                     {isSearching ? "Searching..." : "Search"}
                   </Button>
                 </div>
@@ -129,25 +129,28 @@ const AddBook = () => {
                     {searchResults.map((book) => (
                       <div
                         key={book.id}
-                        className="p-4 hover:bg-gray-50 cursor-pointer"
+                        className="p-4 hover:bg-gray-50 cursor-pointer flex items-start gap-4"
                         onClick={() => handleBookSelect(book)}
                       >
-                        <div className="flex items-start gap-4">
-                          {book.volumeInfo.imageLinks?.thumbnail && (
-                            <img
-                              src={book.volumeInfo.imageLinks.thumbnail}
-                              alt={book.volumeInfo.title}
-                              className="w-16 h-auto"
-                            />
+                        {book.volumeInfo.imageLinks?.thumbnail && (
+                          <img
+                            src={book.volumeInfo.imageLinks.thumbnail}
+                            alt={book.volumeInfo.title}
+                            className="w-16 h-auto object-cover"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-medium">{book.volumeInfo.title}</h3>
+                          {book.volumeInfo.authors && (
+                            <p className="text-sm text-muted-foreground">
+                              by {book.volumeInfo.authors.join(", ")}
+                            </p>
                           )}
-                          <div>
-                            <h3 className="font-medium">{book.volumeInfo.title}</h3>
-                            {book.volumeInfo.authors && (
-                              <p className="text-sm text-muted-foreground">
-                                by {book.volumeInfo.authors.join(", ")}
-                              </p>
-                            )}
-                          </div>
+                          {book.volumeInfo.publishedDate && (
+                            <p className="text-sm text-muted-foreground">
+                              Published: {new Date(book.volumeInfo.publishedDate).getFullYear()}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -165,11 +168,16 @@ const AddBook = () => {
                           className="w-20 h-auto"
                         />
                       )}
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-medium">{selectedBook.volumeInfo.title}</h3>
                         {selectedBook.volumeInfo.authors && (
                           <p className="text-sm text-muted-foreground">
                             by {selectedBook.volumeInfo.authors.join(", ")}
+                          </p>
+                        )}
+                        {selectedBook.volumeInfo.description && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
+                            {selectedBook.volumeInfo.description}
                           </p>
                         )}
                         <Button
@@ -192,8 +200,7 @@ const AddBook = () => {
                   <Label htmlFor="condition">Condition *</Label>
                   <Select
                     value={formData.condition}
-                    onValueChange={(value) => handleSelectChange("condition", value)}
-                    required
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, condition: value }))}
                   >
                     <SelectTrigger id="condition">
                       <SelectValue placeholder="Select condition" />
@@ -212,8 +219,7 @@ const AddBook = () => {
                   <Label htmlFor="neighborhood">Your Neighborhood *</Label>
                   <Select
                     value={formData.neighborhood}
-                    onValueChange={(value) => handleSelectChange("neighborhood", value)}
-                    required
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
                   >
                     <SelectTrigger id="neighborhood">
                       <SelectValue placeholder="Select neighborhood" />
@@ -229,32 +235,20 @@ const AddBook = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label>Book Cover Color</Label>
-                <div className="grid grid-cols-6 gap-3">
-                  {coverColors.map(color => (
-                    <div 
-                      key={color.value}
-                      className={`h-12 rounded-md cursor-pointer transition-all border-2 ${
-                        formData.coverColor === color.value 
-                          ? 'border-black scale-105' 
-                          : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                      onClick={() => handleColorSelect(color.value)}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-              
               <div className="pt-4">
                 <Button 
                   type="submit" 
-                  className="w-full bg-bookswap-darkblue hover:bg-bookswap-darkblue/90"
-                  disabled={!selectedBook || !formData.condition || !formData.neighborhood}
+                  className="w-full"
+                  disabled={!selectedBook || !formData.condition || !formData.neighborhood || isSubmitting}
                 >
-                  Add Book to Swap List
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Adding Book...
+                    </>
+                  ) : (
+                    "Add Book to Swap List"
+                  )}
                 </Button>
               </div>
             </div>

@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
-import { Json } from "@/integrations/supabase/types";
 
 interface OwnerData {
   name?: string;
@@ -26,14 +25,18 @@ export default function MyBooks() {
       if (error) throw error;
       
       return data.map(book => {
-        // Safely handle the owner field
-        const ownerData: OwnerData = {};
+        // Extract owner data safely without deep type recursion
+        let ownerName = "";
+        let ownerNeighborhood = "";
         
         if (typeof book.owner === 'object' && book.owner !== null) {
-          // Cast to any to avoid deep type recursion
-          const owner = book.owner as any;
-          ownerData.name = owner.name || "";
-          ownerData.neighborhood = owner.neighborhood || "";
+          const ownerObj = book.owner as Record<string, unknown>;
+          if (typeof ownerObj.name === 'string') {
+            ownerName = ownerObj.name;
+          }
+          if (typeof ownerObj.neighborhood === 'string') {
+            ownerNeighborhood = ownerObj.neighborhood;
+          }
         }
         
         return {
@@ -44,8 +47,8 @@ export default function MyBooks() {
           description: book.description || "",
           condition: book.condition,
           owner: {
-            name: ownerData.name || "",
-            neighborhood: ownerData.neighborhood || ""
+            name: ownerName,
+            neighborhood: ownerNeighborhood
           },
           google_books_id: book.google_books_id
         };

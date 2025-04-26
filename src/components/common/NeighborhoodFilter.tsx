@@ -1,25 +1,7 @@
+
 import { Check } from "lucide-react";
 import { useState } from "react";
 import { jerusalemNeighborhoods } from "@/data/jerusalemNeighborhoods";
-
-const NEIGHBORHOODS = [
-  "Baka",
-  "German Colony",
-  "Katamon",
-  "Rehavia",
-  "City Center",
-  "Talpiot",
-  "Arnona",
-  "French Hill",
-  "Ramot",
-  "Gilo",
-  "Pisgat Ze'ev",
-  "Har Nof",
-  "Bayit Vegan",
-  "Nachlaot",
-  "Kiryat Moshe",
-  "Old City"
-];
 
 interface NeighborhoodFilterProps {
   selectedNeighborhoods: string[];
@@ -39,6 +21,18 @@ export function NeighborhoodFilter({
       onChange([...selectedNeighborhoods, neighborhood]);
     }
   };
+
+  const toggleAll = () => {
+    if (selectedNeighborhoods.length === jerusalemNeighborhoods.length) {
+      // If all are selected, deselect all
+      onChange([]);
+    } else {
+      // If not all are selected, select all
+      onChange([...jerusalemNeighborhoods]);
+    }
+  };
+
+  const allSelected = selectedNeighborhoods.length === jerusalemNeighborhoods.length;
 
   return (
     <div className="relative">
@@ -70,6 +64,15 @@ export function NeighborhoodFilter({
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
           <div className="p-2">
+            <div 
+              className="flex items-center px-2 py-1 rounded-sm hover:bg-muted cursor-pointer border-b border-border mb-1"
+              onClick={toggleAll}
+            >
+              <div className="w-4 h-4 mr-2 border border-border rounded-sm flex items-center justify-center">
+                {allSelected && <Check className="w-3 h-3 text-primary" />}
+              </div>
+              <span className="text-sm font-medium">Select All</span>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
               {jerusalemNeighborhoods.map(neighborhood => (
                 <div

@@ -27,17 +27,7 @@ export default function MyBooks() {
       
       if (data) {
         for (const book of data) {
-          // Extract owner data safely
-          let ownerName = '';
-          let ownerNeighborhood = '';
-          
-          if (book.owner && typeof book.owner === 'object') {
-            // Type assertion to make TypeScript happy
-            const ownerObj = book.owner as Record<string, any>;
-            ownerName = typeof ownerObj.name === 'string' ? ownerObj.name : '';
-            ownerNeighborhood = typeof ownerObj.neighborhood === 'string' ? ownerObj.neighborhood : '';
-          }
-          
+          // Create a typed book object without complex nested inference
           result.push({
             id: String(book.id || ''),
             title: String(book.title || ''),
@@ -46,8 +36,8 @@ export default function MyBooks() {
             description: book.description ? String(book.description) : "",
             condition: String(book.condition || 'Good'),
             owner: {
-              name: ownerName,
-              neighborhood: ownerNeighborhood,
+              name: getStringValue(book.owner, 'name'),
+              neighborhood: getStringValue(book.owner, 'neighborhood')
             },
             google_books_id: book.google_books_id ? String(book.google_books_id) : undefined
           });
@@ -58,6 +48,12 @@ export default function MyBooks() {
     },
     enabled: !!user
   });
+
+  // Helper function to safely extract string values from potentially complex objects
+  function getStringValue(obj: any, key: string): string {
+    if (!obj || typeof obj !== 'object') return '';
+    return typeof obj[key] === 'string' ? obj[key] : '';
+  }
 
   if (!user) {
     return (

@@ -27,8 +27,8 @@ export default function MyBooks() {
         description: book.description || "",
         condition: book.condition,
         owner: {
-          name: (book.owner as any)?.name || "",
-          neighborhood: (book.owner as any)?.neighborhood || ""
+          name: book.owner && typeof book.owner === 'object' ? (book.owner as any).name || "" : "",
+          neighborhood: book.owner && typeof book.owner === 'object' ? (book.owner as any).neighborhood || "" : ""
         },
         google_books_id: book.google_books_id
       }));

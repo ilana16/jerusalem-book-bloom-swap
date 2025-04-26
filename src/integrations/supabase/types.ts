@@ -16,6 +16,7 @@ export type Database = {
           cover_color: string
           created_at: string
           description: string | null
+          google_books_id: string | null
           id: string
           owner: Json
           title: string
@@ -27,6 +28,7 @@ export type Database = {
           cover_color?: string
           created_at?: string
           description?: string | null
+          google_books_id?: string | null
           id?: string
           owner: Json
           title: string
@@ -38,6 +40,7 @@ export type Database = {
           cover_color?: string
           created_at?: string
           description?: string | null
+          google_books_id?: string | null
           id?: string
           owner?: Json
           title?: string

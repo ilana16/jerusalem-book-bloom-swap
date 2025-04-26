@@ -9,13 +9,12 @@ import { MyBooksList } from "@/components/common/MyBooksList";
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Explicitly type the query result and use a more direct approach
-  const { data: books, isLoading, error } = useQuery<Book[]>({
+  // Define the query with explicit types to prevent deep type inference
+  const { data: books, isLoading, error } = useQuery({
     queryKey: ['my-books'],
-    queryFn: async () => {
-      if (!user) return [] as Book[];
+    queryFn: async (): Promise<Book[]> => {
+      if (!user) return [];
       
-      // Use a simpler approach to fetch data
       const { data, error } = await supabase
         .from('books')
         .select('*')
@@ -23,12 +22,12 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform the data more explicitly
+      // Create a properly typed array for the results
       const result: Book[] = [];
       
       if (data) {
         for (const item of data) {
-          // Use type assertions and explicit conversions to avoid deep type inference
+          // Create each book with explicit type casting
           const book: Book = {
             id: String(item.id || ''),
             title: String(item.title || ''),
@@ -37,7 +36,6 @@ export default function MyBooks() {
             description: item.description ? String(item.description) : "",
             condition: String(item.condition || 'Good'),
             owner: {
-              // Use the helper function to safely extract strings
               name: getOwnerProperty(item.owner, 'name'),
               neighborhood: getOwnerProperty(item.owner, 'neighborhood')
             },
@@ -53,7 +51,7 @@ export default function MyBooks() {
     enabled: !!user
   });
 
-  // Helper function with more explicit typing to safely extract owner properties
+  // Helper function with explicit typing to safely extract owner properties
   function getOwnerProperty(owner: unknown, key: string): string {
     if (owner && typeof owner === 'object' && owner !== null) {
       const ownerObj = owner as Record<string, unknown>;

@@ -6,7 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define interface for raw book data from database to avoid recursion
+// Define owner structure separately to avoid recursion
+interface BookOwner {
+  id?: string;
+  name?: string;
+  neighborhood?: string;
+}
+
+// Define interface for raw book data from database
 interface BookDbRecord {
   id: string;
   title: string;
@@ -14,19 +21,8 @@ interface BookDbRecord {
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: {
-    id?: string;
-    name?: string;
-    neighborhood?: string;
-  } | null;
+  owner: BookOwner | null;
   google_books_id: string | null;
-}
-
-// Define a simpler interface for owner type to avoid deep recursion
-interface BookOwner {
-  id?: string;
-  name?: string;
-  neighborhood?: string;
 }
 
 export default function MyBooks() {
@@ -45,7 +41,7 @@ export default function MyBooks() {
       if (error) throw error;
       
       // Convert raw data to Book type with proper type casting
-      return (data as BookDbRecord[] || []).map((book) => ({
+      return (data as unknown as BookDbRecord[] || []).map((book) => ({
         id: book.id,
         title: book.title,
         author: book.author,

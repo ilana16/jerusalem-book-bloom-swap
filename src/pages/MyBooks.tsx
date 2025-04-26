@@ -14,7 +14,7 @@ interface RawBookData {
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: unknown; // Use unknown to avoid deep type recursion
+  owner: any; // Use any to avoid deep type recursion error
   google_books_id: string | null;
 }
 

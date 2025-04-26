@@ -6,11 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// We'll completely avoid complex type inference to prevent the deep instantiation error
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Using a simple non-generic query to prevent TypeScript from deeply analyzing the return type
+  // Completely avoid type inference by using an object literal type
   const { data: books = [], isLoading, error } = useQuery({
     queryKey: ['my-books'],
     queryFn: async () => {
@@ -23,22 +22,29 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform data with explicit typing to avoid TypeScript recursion
-      return (data || []).map((rawBook: any): Book => ({
-        id: rawBook.id,
-        title: rawBook.title,
-        author: rawBook.author,
-        coverColor: rawBook.cover_color,
-        description: rawBook.description || "",
-        condition: rawBook.condition,
-        owner: {
-          name: typeof rawBook.owner === 'object' && rawBook.owner && 'name' in rawBook.owner ? 
-               String(rawBook.owner.name) : "",
-          neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && 'neighborhood' in rawBook.owner ? 
-               String(rawBook.owner.neighborhood) : ""
-        },
-        google_books_id: rawBook.google_books_id || undefined
-      }));
+      // Transform raw data to Book objects without relying on TypeScript inference
+      const transformedBooks: Book[] = [];
+      for (const rawBook of (data || [])) {
+        transformedBooks.push({
+          id: String(rawBook.id),
+          title: String(rawBook.title),
+          author: String(rawBook.author),
+          coverColor: String(rawBook.cover_color),
+          description: rawBook.description ? String(rawBook.description) : "",
+          condition: String(rawBook.condition),
+          owner: {
+            name: typeof rawBook.owner === 'object' && rawBook.owner && 'name' in rawBook.owner 
+              ? String(rawBook.owner.name) 
+              : "",
+            neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && 'neighborhood' in rawBook.owner 
+              ? String(rawBook.owner.neighborhood) 
+              : ""
+          },
+          google_books_id: rawBook.google_books_id ? String(rawBook.google_books_id) : undefined
+        });
+      }
+      
+      return transformedBooks;
     },
     enabled: !!user
   });

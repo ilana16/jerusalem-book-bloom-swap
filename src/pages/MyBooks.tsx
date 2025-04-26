@@ -6,24 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define simpler interfaces to break type recursion
-interface SimpleOwner {
-  id?: string;
-  name?: string;
-  neighborhood?: string;
-}
-
-interface RawBookData {
-  id: string;
-  title: string;
-  author: string;
-  cover_color: string;
-  description: string | null;
-  condition: string;
-  owner: SimpleOwner;
-  google_books_id: string | null;
-}
-
 export default function MyBooks() {
   const { user } = useAuth();
 
@@ -39,11 +21,8 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Use a simple type cast to avoid recursion
-      const rawBooks = data as any[];
-      
-      // Map to our Book type with controlled typing
-      return rawBooks.map(book => ({
+      // Convert raw data to our Book type without complex typing
+      return (data || []).map(book => ({
         id: book.id,
         title: book.title,
         author: book.author,

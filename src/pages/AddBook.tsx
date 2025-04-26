@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
+import { GoogleBook, searchBooks } from "@/services/googleBooks";
 
 const conditions = ["Like New", "Very Good", "Good", "Fair", "Poor"];
-
 const neighborhoods = [
   "Baka",
   "German Colony",
@@ -41,18 +41,34 @@ const coverColors = [
 
 const AddBook = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<GoogleBook[]>([]);
+  const [selectedBook, setSelectedBook] = useState<GoogleBook | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    description: "",
     condition: "",
     neighborhood: "",
     coverColor: "#436B95"
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const results = await searchBooks(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      toast.error("Error searching for books");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleBookSelect = (book: GoogleBook) => {
+    setSelectedBook(book);
+    setSearchResults([]);
+    setSearchQuery("");
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -63,16 +79,19 @@ const AddBook = () => {
     setFormData(prev => ({ ...prev, coverColor: color }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!selectedBook) {
+      toast.error("Please select a book first");
+      return;
+    }
+    if (!formData.condition || !formData.neighborhood) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     // In a real app, we would send this data to the backend
-    toast({
-      title: "Book added successfully!",
-      description: "Your book is now available for swapping.",
-    });
-    
-    // Redirect to books page
+    toast.success("Book added successfully!");
     navigate("/books");
   };
 
@@ -84,42 +103,90 @@ const AddBook = () => {
         <div className="bg-white border border-border rounded-lg p-6 md:p-8">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Book Title *</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Enter the book title"
-                  required
-                />
+              {/* Book Search Section */}
+              <div className="space-y-4">
+                <Label>Search for your book</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by title, author, or ISBN"
+                    className="flex-1"
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={handleSearch}
+                    disabled={isSearching}
+                  >
+                    <Search className="w-4 h-4 mr-2" />
+                    {isSearching ? "Searching..." : "Search"}
+                  </Button>
+                </div>
+
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                  <div className="mt-4 border rounded-md divide-y">
+                    {searchResults.map((book) => (
+                      <div
+                        key={book.id}
+                        className="p-4 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleBookSelect(book)}
+                      >
+                        <div className="flex items-start gap-4">
+                          {book.volumeInfo.imageLinks?.thumbnail && (
+                            <img
+                              src={book.volumeInfo.imageLinks.thumbnail}
+                              alt={book.volumeInfo.title}
+                              className="w-16 h-auto"
+                            />
+                          )}
+                          <div>
+                            <h3 className="font-medium">{book.volumeInfo.title}</h3>
+                            {book.volumeInfo.authors && (
+                              <p className="text-sm text-muted-foreground">
+                                by {book.volumeInfo.authors.join(", ")}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Selected Book Display */}
+                {selectedBook && (
+                  <div className="mt-4 p-4 border rounded-md bg-muted/20">
+                    <div className="flex items-start gap-4">
+                      {selectedBook.volumeInfo.imageLinks?.thumbnail && (
+                        <img
+                          src={selectedBook.volumeInfo.imageLinks.thumbnail}
+                          alt={selectedBook.volumeInfo.title}
+                          className="w-20 h-auto"
+                        />
+                      )}
+                      <div>
+                        <h3 className="font-medium">{selectedBook.volumeInfo.title}</h3>
+                        {selectedBook.volumeInfo.authors && (
+                          <p className="text-sm text-muted-foreground">
+                            by {selectedBook.volumeInfo.authors.join(", ")}
+                          </p>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="mt-2 h-8 text-sm"
+                          onClick={() => setSelectedBook(null)}
+                        >
+                          Change Book
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="author">Author *</Label>
-                <Input
-                  id="author"
-                  name="author"
-                  value={formData.author}
-                  onChange={handleChange}
-                  placeholder="Enter the author's name"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Brief description or synopsis of the book"
-                  rows={4}
-                />
-              </div>
-              
+
+              {/* Book Details Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="condition">Condition *</Label>
@@ -185,6 +252,7 @@ const AddBook = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-bookswap-darkblue hover:bg-bookswap-darkblue/90"
+                  disabled={!selectedBook || !formData.condition || !formData.neighborhood}
                 >
                   Add Book to Swap List
                 </Button>

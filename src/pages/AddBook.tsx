@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -60,35 +59,39 @@ const AddBook = () => {
 
     setIsSubmitting(true);
     try {
+      // Generate a color from the book ID if we have one, otherwise use default
+      const coverColor = selectedBook.volumeInfo.imageLinks?.thumbnail 
+        ? '#' + selectedBook.id.slice(0, 6) 
+        : '#436B95';
+        
       const bookData = {
         title: selectedBook.volumeInfo.title,
         author: selectedBook.volumeInfo.authors?.[0] || "Unknown Author",
         description: selectedBook.volumeInfo.description || "",
-        cover_color: selectedBook.volumeInfo.imageLinks?.thumbnail ? 
-          // Extract a color from the thumbnail URL (simple approach)
-          '#' + selectedBook.id.slice(0, 6) : 
-          '#436B95', // Default color
+        cover_color: coverColor,
         condition: formData.condition,
         owner: {
           id: user.id,
           name: user.email,
           neighborhood: formData.neighborhood
         },
-        google_books_id: selectedBook.id, // Added this line to save Google Books ID
-        created_at: new Date().toISOString(),
+        google_books_id: selectedBook.id,
       };
 
-      const { error } = await supabase.from('books').insert([bookData]);
+      console.log('Submitting book data:', bookData);
+      const { data, error } = await supabase.from('books').insert([bookData]);
 
       if (error) {
+        console.error('Supabase insertion error:', error);
         throw error;
       }
 
+      console.log('Book added successfully:', data);
       toast.success("Book added successfully!");
       navigate("/books");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submission error:', error);
-      toast.error("Error adding book");
+      toast.error(`Error adding book: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

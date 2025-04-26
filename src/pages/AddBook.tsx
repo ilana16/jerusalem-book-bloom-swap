@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -11,13 +10,13 @@ import { Search, Loader2 } from "lucide-react";
 import { GoogleBook, searchBooks } from "@/services/googleBooks";
 import { jerusalemNeighborhoods } from "@/data/jerusalemNeighborhoods";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/components/AuthProvider";
+import { useAuth } from "@/components/AuthProvider";
 
 const conditions = ["Like New", "Very Good", "Good", "Fair", "Poor"];
 
 const AddBook = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<GoogleBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<GoogleBook | null>(null);
@@ -64,7 +63,7 @@ const AddBook = () => {
         title: selectedBook.volumeInfo.title,
         author: selectedBook.volumeInfo.authors?.[0] || "Unknown Author",
         description: selectedBook.volumeInfo.description || "",
-        cover_image: selectedBook.volumeInfo.imageLinks?.thumbnail || "",
+        cover_color: '#436B95', // Default color
         condition: formData.condition,
         owner: {
           id: user.id,

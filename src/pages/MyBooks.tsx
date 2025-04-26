@@ -6,11 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// We'll simplify the approach by removing complex type definitions
+// We'll avoid type recursion by defining our query without complex type inference
 export default function MyBooks() {
   const { user } = useAuth();
 
-  const { data: books = [], isLoading, error } = useQuery<Book[]>({
+  // Remove explicit Book[] type annotation that was causing the deep instantiation
+  const { data: books = [], isLoading, error } = useQuery({
     queryKey: ['my-books'],
     queryFn: async () => {
       if (!user) return [];
@@ -22,25 +23,22 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform data with simpler approach to avoid deep type instantiation
-      return (data || []).map((rawBook: any) => {
-        // Create a Book object with explicit properties to avoid TypeScript recursion
-        return {
-          id: rawBook.id,
-          title: rawBook.title,
-          author: rawBook.author,
-          coverColor: rawBook.cover_color,
-          description: rawBook.description || "",
-          condition: rawBook.condition,
-          owner: {
-            name: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.name ? 
-                 rawBook.owner.name : "",
-            neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.neighborhood ? 
-                 rawBook.owner.neighborhood : ""
-          },
-          google_books_id: rawBook.google_books_id || undefined
-        };
-      });
+      // Cast the raw data and map to our Book type without nesting type instantiations
+      return (data || []).map((rawBook: any) => ({
+        id: rawBook.id,
+        title: rawBook.title,
+        author: rawBook.author,
+        coverColor: rawBook.cover_color,
+        description: rawBook.description || "",
+        condition: rawBook.condition,
+        owner: {
+          name: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.name ? 
+               rawBook.owner.name : "",
+          neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.neighborhood ? 
+               rawBook.owner.neighborhood : ""
+        },
+        google_books_id: rawBook.google_books_id || undefined
+      } as Book));
     },
     enabled: !!user
   });

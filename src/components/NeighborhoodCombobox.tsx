@@ -28,6 +28,9 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
   // Ensure the neighborhoods array is always defined with a fallback empty array
   const neighborhoods = jerusalemNeighborhoods || [];
 
+  // Create a memoized filtered list to prevent re-renders
+  const items = React.useMemo(() => neighborhoods, []);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -41,14 +44,15 @@ export function NeighborhoodCombobox({ value, onChange }: NeighborhoodComboboxPr
           <MapPin className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-full p-0" align="start">
         <Command>
           <CommandInput placeholder="Search neighborhood..." />
           <CommandEmpty>No neighborhood found.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
-            {neighborhoods.map((neighborhood) => (
+            {items.map((neighborhood) => (
               <CommandItem
                 key={neighborhood}
+                value={neighborhood}
                 onSelect={() => {
                   onChange(neighborhood);
                   setOpen(false);

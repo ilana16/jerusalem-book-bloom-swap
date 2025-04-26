@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -60,9 +61,11 @@ export function Header() {
                   <Link to="/chat" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
                     Messages
                   </Link>
-                  <Link to="/profile" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
-                    My Profile
-                  </Link>
+                  {user && (
+                    <Link to="/profile" className="px-4 py-2 hover:bg-muted rounded-md" onClick={() => setMobileMenuOpen(false)}>
+                      My Profile
+                    </Link>
+                  )}
                   {user ? (
                     <Button variant="ghost" onClick={handleLogout} className="justify-start">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -102,8 +105,10 @@ export function Header() {
               </Button>
               {user ? (
                 <>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/profile">
+                      <User className="h-4 w-4" />
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="icon" onClick={handleLogout}>
                     <LogOut className="h-4 w-4" />

@@ -31,10 +31,11 @@ const Matches = () => {
       
       const userId = userResponse.user.id;
 
+      // Using string filters instead of JSON path operators which can cause type issues
       const { data: currentUserBooks, error: booksError } = await supabase
         .from('books')
         .select('*')
-        .eq('owner->id', userId);
+        .filter('owner', 'cs', `{"id":"${userId}"}`);
 
       if (booksError) {
         throw booksError;
@@ -44,7 +45,7 @@ const Matches = () => {
       const { data: potentialMatches, error: matchError } = await supabase
         .from('books')
         .select('*')
-        .neq('owner->id', userId);
+        .not('owner', 'cs', `{"id":"${userId}"}`);
 
       if (matchError) {
         throw matchError;

@@ -26,13 +26,20 @@ const Books = () => {
         );
       }
       
+      // Fixed neighborhood filtering logic
       if (selectedNeighborhoods.length > 0) {
-        query = query.filter('owner->neighborhood', 'in', `(${selectedNeighborhoods.join(',')})`);
+        // Using a more compatible approach for JSON column filtering
+        selectedNeighborhoods.forEach(neighborhood => {
+          query = query.or(`owner->neighborhood.eq.${neighborhood}`);
+        });
       }
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase query error:", error);
+        throw error;
+      }
       
       return (data || []).map(book => ({
         id: book.id,
@@ -47,11 +54,30 @@ const Books = () => {
   });
 
   if (isLoading) {
-    return <div>Loading books...</div>;
+    return (
+      <Layout>
+        <div className="page-container">
+          <div className="flex justify-center items-center py-12">
+            <p className="text-lg">Loading books...</p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   if (error) {
-    return <div>Error loading books</div>;
+    return (
+      <Layout>
+        <div className="page-container">
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <p className="text-lg text-red-600 font-medium mb-2">Error loading books</p>
+              <p className="text-muted-foreground">Please try again later or contact support</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   return (

@@ -5,6 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
+import { Json } from "@/integrations/supabase/types";
+
+interface OwnerData {
+  name?: string;
+  neighborhood?: string;
+}
 
 export default function MyBooks() {
   const { user } = useAuth();
@@ -19,19 +25,31 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      return data.map(book => ({
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        coverColor: book.cover_color,
-        description: book.description || "",
-        condition: book.condition,
-        owner: {
-          name: typeof book.owner === 'object' && book.owner ? book.owner.name || "" : "",
-          neighborhood: typeof book.owner === 'object' && book.owner ? book.owner.neighborhood || "" : ""
-        },
-        google_books_id: book.google_books_id
-      }));
+      return data.map(book => {
+        // Safely handle the owner field
+        const ownerData: OwnerData = {};
+        
+        if (typeof book.owner === 'object' && book.owner !== null) {
+          // Cast to any to avoid deep type recursion
+          const owner = book.owner as any;
+          ownerData.name = owner.name || "";
+          ownerData.neighborhood = owner.neighborhood || "";
+        }
+        
+        return {
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          coverColor: book.cover_color,
+          description: book.description || "",
+          condition: book.condition,
+          owner: {
+            name: ownerData.name || "",
+            neighborhood: ownerData.neighborhood || ""
+          },
+          google_books_id: book.google_books_id
+        };
+      });
     },
     enabled: !!user
   });

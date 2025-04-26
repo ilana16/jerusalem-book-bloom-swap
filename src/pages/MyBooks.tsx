@@ -6,14 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// Define simple owner structure to avoid recursion
+// Define the owner structure with simple types to avoid recursion
 interface BookOwner {
   id?: string;
   name?: string;
   neighborhood?: string;
 }
 
-// Define interface for raw book data from database
+// Define simplified interface for raw book data from database
 interface RawBookData {
   id: string;
   title: string;
@@ -21,7 +21,7 @@ interface RawBookData {
   cover_color: string;
   description: string | null;
   condition: string;
-  owner: BookOwner;
+  owner: Record<string, any>; // Use Record type to avoid deep type instantiation
   google_books_id: string | null;
 }
 
@@ -42,22 +42,22 @@ export default function MyBooks() {
       
       // Transform raw data to Book type using explicit mapping
       return (data || []).map((rawBook) => {
-        // Use type assertion with a simpler intermediate type
-        const book = rawBook as unknown as RawBookData;
+        // Cast to any first to avoid TypeScript recursion issues
+        const rawData = rawBook as any;
         
         // Explicitly construct the Book object with proper types
         return {
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          coverColor: book.cover_color,
-          description: book.description || "",
-          condition: book.condition,
+          id: rawData.id,
+          title: rawData.title,
+          author: rawData.author,
+          coverColor: rawData.cover_color,
+          description: rawData.description || "",
+          condition: rawData.condition,
           owner: {
-            name: book.owner?.name || "",
-            neighborhood: book.owner?.neighborhood || ""
+            name: rawData.owner?.name || "",
+            neighborhood: rawData.owner?.neighborhood || ""
           },
-          google_books_id: book.google_books_id || undefined
+          google_books_id: rawData.google_books_id || undefined
         };
       });
     },

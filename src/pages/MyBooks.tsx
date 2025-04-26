@@ -6,9 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-interface OwnerData {
-  name?: string;
-  neighborhood?: string;
+// Define a simple interface for the raw book data from Supabase
+interface RawBookData {
+  id: string;
+  title: string;
+  author: string;
+  cover_color: string;
+  description: string | null;
+  condition: string;
+  owner: unknown; // Use unknown to avoid deep type recursion
+  google_books_id: string | null;
 }
 
 export default function MyBooks() {
@@ -24,8 +31,9 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      return data.map(book => {
-        // Extract owner data safely without deep type recursion
+      // Transform raw data to our Book type
+      return (data as RawBookData[]).map(book => {
+        // Extract owner data safely
         let ownerName = "";
         let ownerNeighborhood = "";
         

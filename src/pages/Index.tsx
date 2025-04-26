@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -21,7 +22,15 @@ const Index = () => {
         throw error;
       }
       
-      return data || [];
+      return (data || []).map(book => ({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        coverColor: book.cover_color,
+        description: book.description || "",
+        condition: book.condition,
+        owner: book.owner as { name: string; neighborhood: string }
+      }));
     }
   });
 

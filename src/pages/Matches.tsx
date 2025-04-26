@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { BookCard, Book } from "@/components/common/BookCard";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,15 @@ const Matches = () => {
     queryFn: async () => {
       // This is a placeholder. In a real implementation, you'd create a function 
       // in Supabase or your backend to generate these matches
+      const { data: userResponse } = await supabase.auth.getUser();
+      if (!userResponse.user) throw new Error("Not authenticated");
+      
+      const userId = userResponse.user.id;
+
       const { data: currentUserBooks, error: booksError } = await supabase
         .from('books')
         .select('*')
-        .eq('owner->id', supabase.auth.getUser()?.id);
+        .eq('owner->id', userId);
 
       if (booksError) {
         throw booksError;
@@ -39,7 +44,7 @@ const Matches = () => {
       const { data: potentialMatches, error: matchError } = await supabase
         .from('books')
         .select('*')
-        .neq('owner->id', supabase.auth.getUser()?.id);
+        .neq('owner->id', userId);
 
       if (matchError) {
         throw matchError;

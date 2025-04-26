@@ -32,13 +32,15 @@ const Chat = () => {
   const { data: contacts = [], isLoading, error } = useQuery<ChatContact[]>({
     queryKey: ['chats'],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("Not authenticated");
+      const { data: userResponse } = await supabase.auth.getUser();
+      if (!userResponse.user) throw new Error("Not authenticated");
+      
+      const userId = userResponse.user.id;
 
       const { data, error } = await supabase
         .from('chats')
         .select('*')
-        .eq('user_id', user.user.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -66,14 +68,14 @@ const Chat = () => {
     if (!messageText.trim() || !selectedContactId) return;
     
     try {
-      const { data: user } = await supabase.auth.getUser();
+      const { data: userResponse } = await supabase.auth.getUser();
       
       const { error } = await supabase
         .from('messages')
         .insert({
           chat_id: selectedContactId,
           text: messageText,
-          sender_id: user?.user?.id,
+          sender: userResponse.user?.id || "unknown",
           timestamp: new Date().toISOString()
         });
 

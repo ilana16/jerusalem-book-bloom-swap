@@ -46,8 +46,6 @@ const Books = () => {
     }
   });
 
-  const filteredBooks = books;
-
   if (isLoading) {
     return <div>Loading books...</div>;
   }
@@ -90,12 +88,12 @@ const Books = () => {
 
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredBooks.length} of {filteredBooks.length} books
+            Showing {books.length} of {books.length} books
           </p>
         </div>
 
         <BookList 
-          books={filteredBooks} 
+          books={books} 
           emptyMessage="No books match your search criteria. Try adjusting your filters or add your own books to share!"
         />
       </div>

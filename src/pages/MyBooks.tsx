@@ -22,6 +22,13 @@ interface BookDbRecord {
   google_books_id: string | null;
 }
 
+// Define a simpler interface for owner type to avoid deep recursion
+interface BookOwner {
+  id?: string;
+  name?: string;
+  neighborhood?: string;
+}
+
 export default function MyBooks() {
   const { user } = useAuth();
 

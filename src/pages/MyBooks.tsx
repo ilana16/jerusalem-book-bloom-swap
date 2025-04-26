@@ -6,15 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
-// We'll avoid type recursion by defining our query without complex type inference
+// We'll completely avoid complex type inference to prevent the deep instantiation error
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Remove explicit Book[] type annotation that was causing the deep instantiation
+  // Using a simple non-generic query to prevent TypeScript from deeply analyzing the return type
   const { data: books = [], isLoading, error } = useQuery({
     queryKey: ['my-books'],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) return [] as Book[];
       
       const { data, error } = await supabase
         .from('books')
@@ -23,8 +23,8 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Cast the raw data and map to our Book type without nesting type instantiations
-      return (data || []).map((rawBook: any) => ({
+      // Transform data with explicit typing to avoid TypeScript recursion
+      return (data || []).map((rawBook: any): Book => ({
         id: rawBook.id,
         title: rawBook.title,
         author: rawBook.author,
@@ -32,13 +32,13 @@ export default function MyBooks() {
         description: rawBook.description || "",
         condition: rawBook.condition,
         owner: {
-          name: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.name ? 
-               rawBook.owner.name : "",
-          neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && rawBook.owner.neighborhood ? 
-               rawBook.owner.neighborhood : ""
+          name: typeof rawBook.owner === 'object' && rawBook.owner && 'name' in rawBook.owner ? 
+               String(rawBook.owner.name) : "",
+          neighborhood: typeof rawBook.owner === 'object' && rawBook.owner && 'neighborhood' in rawBook.owner ? 
+               String(rawBook.owner.neighborhood) : ""
         },
         google_books_id: rawBook.google_books_id || undefined
-      } as Book));
+      }));
     },
     enabled: !!user
   });

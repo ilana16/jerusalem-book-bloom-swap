@@ -26,14 +26,11 @@ const Books = () => {
         );
       }
       
-      // Fixed neighborhood filtering logic - using contains operator for JSON
+      // Apply neighborhood filtering if any are selected
       if (selectedNeighborhoods.length > 0) {
-        const neighborhoodConditions = selectedNeighborhoods.map(neighborhood => 
-          // Use single quotes around the neighborhood string value
-          `owner->>neighborhood='${neighborhood}'`
-        ).join(',');
-        
-        query = query.or(neighborhoodConditions);
+        // Instead of using OR with the PostgreSQL JSON operators directly,
+        // we'll filter client-side after fetching the data
+        console.log("Selected neighborhoods:", selectedNeighborhoods);
       }
 
       const { data, error } = await query;
@@ -43,7 +40,8 @@ const Books = () => {
         throw error;
       }
       
-      return (data || []).map(book => ({
+      // Map database results to our Book type
+      const booksData = (data || []).map(book => ({
         id: book.id,
         title: book.title,
         author: book.author,
@@ -52,6 +50,16 @@ const Books = () => {
         condition: book.condition,
         owner: book.owner as { name: string; neighborhood: string }
       }));
+      
+      // Apply neighborhood filtering client-side if needed
+      const filteredBooks = selectedNeighborhoods.length > 0
+        ? booksData.filter(book => 
+            selectedNeighborhoods.includes(book.owner.neighborhood)
+          )
+        : booksData;
+      
+      console.log("Fetched books:", filteredBooks.length);
+      return filteredBooks;
     }
   });
 
@@ -74,7 +82,7 @@ const Books = () => {
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
               <p className="text-lg text-red-600 font-medium mb-2">Error loading books</p>
-              <p className="text-muted-foreground">Please try again later or contact support</p>
+              <p className="text-muted-foreground">{(error as Error).message || "Please try again later or contact support"}</p>
             </div>
           </div>
         </div>
@@ -116,7 +124,7 @@ const Books = () => {
 
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">
-            Showing {books.length} of {books.length} books
+            Showing {books.length} books
           </p>
         </div>
 

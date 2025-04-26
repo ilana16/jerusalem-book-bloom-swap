@@ -15,8 +15,7 @@ const Profile = () => {
   const [profile, setProfile] = useState({
     displayName: '',
     bio: '',
-    neighborhood: '',
-    avatarUrl: ''
+    neighborhood: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,7 +25,7 @@ const Profile = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('display_name, bio, neighborhood, avatar_url')
+        .select('display_name, bio, neighborhood')
         .eq('id', user.id)
         .single();
 
@@ -40,8 +39,7 @@ const Profile = () => {
         setProfile({
           displayName: data.display_name || '',
           bio: data.bio || '',
-          neighborhood: data.neighborhood || '',
-          avatarUrl: data.avatar_url || ''
+          neighborhood: data.neighborhood || ''
         });
       }
     };
@@ -58,8 +56,7 @@ const Profile = () => {
       .update({
         display_name: profile.displayName,
         bio: profile.bio,
-        neighborhood: profile.neighborhood,
-        avatar_url: profile.avatarUrl
+        neighborhood: profile.neighborhood
       })
       .eq('id', user.id);
 
@@ -85,10 +82,6 @@ const Profile = () => {
         <div className="bg-white border border-border rounded-lg p-6 space-y-6">
           <div className="flex items-center space-x-6">
             <Avatar className="h-24 w-24">
-              <AvatarImage 
-                src={profile.avatarUrl || undefined} 
-                alt="Profile avatar" 
-              />
               <AvatarFallback>
                 <User className="h-12 w-12 text-muted-foreground" />
               </AvatarFallback>
@@ -115,12 +108,6 @@ const Profile = () => {
               placeholder="Neighborhood" 
               value={profile.neighborhood}
               onChange={(e) => setProfile({...profile, neighborhood: e.target.value})}
-            />
-            
-            <Input 
-              placeholder="Avatar URL" 
-              value={profile.avatarUrl}
-              onChange={(e) => setProfile({...profile, avatarUrl: e.target.value})}
             />
           </div>
           

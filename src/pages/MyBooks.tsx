@@ -40,21 +40,24 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to Book type
+      // Transform raw data to Book type using explicit mapping
       return (data || []).map((rawBook) => {
-        const book = rawBook as any;
+        // First cast to our intermediate type to handle the database structure
+        const bookRecord = rawBook as unknown as BookDbRecord;
+        
+        // Then map to the Book interface expected by the components
         return {
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          coverColor: book.cover_color,
-          description: book.description || "",
-          condition: book.condition,
+          id: bookRecord.id,
+          title: bookRecord.title,
+          author: bookRecord.author,
+          coverColor: bookRecord.cover_color,
+          description: bookRecord.description || "",
+          condition: bookRecord.condition,
           owner: {
-            name: book.owner?.name || "",
-            neighborhood: book.owner?.neighborhood || ""
+            name: bookRecord.owner?.name || "",
+            neighborhood: bookRecord.owner?.neighborhood || ""
           },
-          google_books_id: book.google_books_id || undefined
+          google_books_id: bookRecord.google_books_id || undefined
         };
       });
     },

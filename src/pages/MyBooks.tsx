@@ -9,11 +9,11 @@ import { MyBooksList } from "@/components/common/MyBooksList";
 export default function MyBooks() {
   const { user } = useAuth();
 
-  // Using explicit typing and avoiding complex inference
+  // Avoid complex type inference by using a simple approach
   const { data: books, isLoading, error } = useQuery({
     queryKey: ['my-books'],
-    queryFn: async (): Promise<Book[]> => {
-      if (!user) return [];
+    queryFn: async () => {
+      if (!user) return [] as Book[];
       
       const { data, error } = await supabase
         .from('books')
@@ -22,11 +22,21 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Transform raw data to Book objects with simpler approach
+      // Transform raw data to Book objects with explicit casting
       const result: Book[] = [];
       if (data) {
-        for (let i = 0; i < data.length; i++) {
-          const book = data[i];
+        for (const book of data) {
+          // Safely access owner properties with type guards
+          let ownerName = "";
+          let ownerNeighborhood = "";
+          
+          if (book.owner && typeof book.owner === 'object' && !Array.isArray(book.owner)) {
+            // Now TypeScript knows owner is an object, not an array
+            const ownerObj = book.owner as Record<string, any>;
+            ownerName = ownerObj.name ? String(ownerObj.name) : "";
+            ownerNeighborhood = ownerObj.neighborhood ? String(ownerObj.neighborhood) : "";
+          }
+          
           result.push({
             id: String(book.id),
             title: String(book.title),
@@ -35,8 +45,8 @@ export default function MyBooks() {
             description: book.description ? String(book.description) : "",
             condition: String(book.condition),
             owner: {
-              name: book.owner && typeof book.owner === 'object' ? String(book.owner.name || "") : "",
-              neighborhood: book.owner && typeof book.owner === 'object' ? String(book.owner.neighborhood || "") : "",
+              name: ownerName,
+              neighborhood: ownerNeighborhood,
             },
             google_books_id: book.google_books_id ? String(book.google_books_id) : undefined
           });

@@ -26,7 +26,10 @@ export default function MyBooks() {
         coverColor: book.cover_color,
         description: book.description || "",
         condition: book.condition,
-        owner: book.owner as { name: string; neighborhood: string },
+        owner: {
+          name: (book.owner as any)?.name || "",
+          neighborhood: (book.owner as any)?.neighborhood || ""
+        },
         google_books_id: book.google_books_id
       }));
     },

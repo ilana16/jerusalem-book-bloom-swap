@@ -6,10 +6,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/components/common/BookCard";
 import { MyBooksList } from "@/components/common/MyBooksList";
 
+// Define an interface for the raw database response to avoid type recursion
+interface BookDbRecord {
+  id: string;
+  title: string;
+  author: string;
+  cover_color: string;
+  description: string | null;
+  condition: string;
+  owner: {
+    id?: string;
+    name?: string;
+    neighborhood?: string;
+  };
+  google_books_id: string | null;
+}
+
 export default function MyBooks() {
   const { user } = useAuth();
 
-  const { data: books = [], isLoading, error } = useQuery({
+  const { data: books = [], isLoading, error } = useQuery<Book[]>({
     queryKey: ['my-books'],
     queryFn: async () => {
       if (!user) return [];
@@ -21,19 +37,22 @@ export default function MyBooks() {
       
       if (error) throw error;
       
-      // Map directly to our Book type structure to avoid type recursion
-      return (data || []).map(book => ({
-        id: book.id as string,
-        title: book.title as string,
-        author: book.author as string,
-        coverColor: book.cover_color as string,
-        description: (book.description as string) || "",
-        condition: book.condition as string,
+      // Explicitly cast data to break type recursion
+      const bookRecords = data as unknown as BookDbRecord[];
+      
+      // Map to our Book type structure with explicit typing
+      return bookRecords.map((book): Book => ({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        coverColor: book.cover_color,
+        description: book.description || "",
+        condition: book.condition,
         owner: {
-          name: ((book.owner as any)?.name as string) || "",
-          neighborhood: ((book.owner as any)?.neighborhood as string) || ""
+          name: book.owner?.name || "",
+          neighborhood: book.owner?.neighborhood || ""
         },
-        google_books_id: book.google_books_id as string | undefined
+        google_books_id: book.google_books_id || undefined
       }));
     },
     enabled: !!user
